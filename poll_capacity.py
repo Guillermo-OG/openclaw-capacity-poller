@@ -101,6 +101,7 @@ def build_clients() -> tuple[oci.core.ComputeClient, oci.identity.IdentityClient
         tenancy=env("OCI_TENANCY_OCID"),
         user=env("OCI_USER_OCID"),
         fingerprint=env("OCI_FINGERPRINT"),
+        private_key_file_location=None,
         private_key_content=env("OCI_PRIVATE_KEY_PEM"),
     )
     config = {"region": env("OCI_REGION")}
