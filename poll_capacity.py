@@ -73,7 +73,7 @@ runcmd:
 
 
 def env(name: str, required: bool = True) -> str:
-    val = os.environ.get(name, "")
+    val = os.environ.get(name, "").strip()
     if required and not val:
         sys.exit(f"FATAL: missing env var {name}")
     return val
