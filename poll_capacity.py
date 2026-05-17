@@ -11,6 +11,7 @@ import base64
 import os
 import pathlib
 import sys
+import tempfile
 import time
 
 import oci
@@ -23,7 +24,6 @@ from oci.core.models import (
     LaunchInstanceShapeConfigDetails,
 )
 from oci.exceptions import ServiceError
-from oci.signer import Signer
 
 SHAPE = "VM.Standard.A1.Flex"
 OCPUS = 4
@@ -97,18 +97,28 @@ def telegram(text: str) -> None:
 
 
 def build_clients() -> tuple[oci.core.ComputeClient, oci.identity.IdentityClient, oci.core.VirtualNetworkClient]:
-    signer = Signer(
-        tenancy=env("OCI_TENANCY_OCID"),
-        user=env("OCI_USER_OCID"),
-        fingerprint=env("OCI_FINGERPRINT"),
-        private_key_file_location=None,
-        private_key_content=env("OCI_PRIVATE_KEY_PEM"),
+    key_pem = env("OCI_PRIVATE_KEY_PEM")
+    if not key_pem.endswith("\n"):
+        key_pem += "\n"
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".pem", delete=False, prefix="oci_key_"
     )
-    config = {"region": env("OCI_REGION")}
+    tmp.write(key_pem)
+    tmp.close()
+    os.chmod(tmp.name, 0o600)
+
+    config = {
+        "user": env("OCI_USER_OCID"),
+        "fingerprint": env("OCI_FINGERPRINT"),
+        "tenancy": env("OCI_TENANCY_OCID"),
+        "region": env("OCI_REGION"),
+        "key_file": tmp.name,
+    }
+    oci.config.validate_config(config)
     return (
-        oci.core.ComputeClient(config, signer=signer),
-        oci.identity.IdentityClient(config, signer=signer),
-        oci.core.VirtualNetworkClient(config, signer=signer),
+        oci.core.ComputeClient(config),
+        oci.identity.IdentityClient(config),
+        oci.core.VirtualNetworkClient(config),
     )
 
 
