@@ -29,10 +29,10 @@ SHAPE = "VM.Standard.A1.Flex"
 OCPUS = 4
 MEMORY_GB = 24
 BOOT_VOLUME_GB = 100
-DISPLAY_NAME = "openclaw-gateway"
+DISPLAY_NAME = os.environ.get("INSTANCE_NAME", "openclaw-gateway")
 
 CLOUD_INIT = """#cloud-config
-hostname: openclaw-gateway
+hostname: {hostname}
 timezone: Etc/UTC
 
 users:
@@ -169,7 +169,7 @@ def try_launch(
     ssh_pub_key: str,
 ) -> str | None:
     user_data = base64.b64encode(
-        CLOUD_INIT.format(ssh_key=ssh_pub_key.strip()).encode()
+        CLOUD_INIT.format(ssh_key=ssh_pub_key.strip(), hostname=DISPLAY_NAME).encode()
     ).decode()
 
     details = LaunchInstanceDetails(
@@ -249,7 +249,8 @@ def main() -> int:
             print(f"LAUNCHED in {ad.name}: {instance_id}")
             ip = fetch_public_ip(compute, vnet, compartment_id, instance_id)
             telegram(
-                "*OPENCLAW VM CREATED*\n"
+                f"*VM CREATED — {DISPLAY_NAME}*\n"
+                f"Region: `{region}`\n"
                 f"AD: `{ad.name}`\n"
                 f"Instance: `{instance_id}`\n"
                 f"Public IP: `{ip or 'pending'}`\n"
