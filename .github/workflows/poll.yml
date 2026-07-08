@@ -49,6 +49,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           INSTANCE_NAME: openclaw-app2-br
+          # BR tenancy A1 service limit is 2 OCPU / 12 GB (checked in console
+          # 2026-07-08) — requesting the classic 4/24 always fails LimitExceeded.
+          OCPUS: '2'
+          MEMORY_GB: '12'
         run: python poll_capacity.py
 
       - name: Upload capacity flag artifact (BR)

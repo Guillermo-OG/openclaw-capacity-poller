@@ -26,8 +26,11 @@ from oci.core.models import (
 from oci.exceptions import ServiceError
 
 SHAPE = "VM.Standard.A1.Flex"
-OCPUS = 4
-MEMORY_GB = 24
+# Overridable per job: free tenancies created after mid-2024 get a reduced
+# A1 limit (e.g. BR tenancy = 2 OCPU / 12 GB), so requesting more than the
+# service limit fails with LimitExceeded before capacity is even checked.
+OCPUS = int(os.environ.get("OCPUS", "4"))
+MEMORY_GB = int(os.environ.get("MEMORY_GB", "24"))
 BOOT_VOLUME_GB = 100
 DISPLAY_NAME = os.environ.get("INSTANCE_NAME", "openclaw-gateway")
 
